@@ -91,10 +91,10 @@ export default function ContractBuilderBlock({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-500" />
-            Build Contract with Agentic Stark
+            AI Solidity Generator
           </CardTitle>
           <CardDescription>
-            Generate smart contract code using Agentic Stark AI with natural language instructions
+            Generate smart contract code using dynamic AI Solidity templates
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -140,9 +140,7 @@ export default function ContractBuilderBlock({
                   <SelectValue placeholder="Select contract type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Cairo">Cairo (Starknet)</SelectItem>
-                  <SelectItem value="Solidity">Solidity (Ethereum)</SelectItem>
-                  <SelectItem value="Auto-detect">Auto-detect</SelectItem>
+                  <SelectItem value="Solidity">Solidity (Monad)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

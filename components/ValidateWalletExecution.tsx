@@ -184,23 +184,23 @@ const ValidateWalletExecution: React.FC<ValidateWalletExecutionProps> = ({
                         "flex items-center justify-between p-3",
                         "bg-white border-2 rounded-lg",
                         "hover:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all",
-                        token.symbol === "ETH" && "border-blue-400",
-                        token.symbol === "STRK" && "border-purple-400",
-                        token.symbol === "USDC" && "border-green-400",
-                        token.symbol === "CHIPPY" && "border-orange-400",
-                        !["ETH", "STRK", "USDC", "CHIPPY"].includes(token.symbol) && "border-gray-300"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center",
-                            "border-2 border-black font-bold text-sm",
-                            token.symbol === "ETH" && "bg-blue-500 text-white",
-                            token.symbol === "STRK" && "bg-purple-500 text-white",
-                            token.symbol === "USDC" && "bg-green-500 text-white",
-                            token.symbol === "CHIPPY" && "bg-orange-500 text-white",
-                            !["ETH", "STRK", "USDC", "CHIPPY"].includes(token.symbol) && "bg-gray-500 text-white"
+                         token.symbol === "MON" && "border-purple-400",
+                         token.symbol === "USDC" && "border-blue-400",
+                         token.symbol === "USDT" && "border-green-400",
+                         token.symbol === "WETH" && "border-orange-400",
+                         !["MON", "USDC", "USDT", "WETH"].includes(token.symbol) && "border-gray-300"
+                       )}
+                     >
+                       <div className="flex items-center gap-3">
+                         <div
+                           className={cn(
+                             "w-10 h-10 rounded-full flex items-center justify-center",
+                             "border-2 border-black font-bold text-sm",
+                             token.symbol === "MON" && "bg-purple-500 text-white",
+                             token.symbol === "USDC" && "bg-blue-500 text-white",
+                             token.symbol === "USDT" && "bg-green-500 text-white",
+                             token.symbol === "WETH" && "bg-orange-500 text-white",
+                             !["MON", "USDC", "USDT", "WETH"].includes(token.symbol) && "bg-gray-500 text-white"
                           )}
                         >
                           {token.symbol.slice(0, 2)}

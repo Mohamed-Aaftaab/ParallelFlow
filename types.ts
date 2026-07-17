@@ -15,7 +15,7 @@ export interface BlockType {
     | "transfer"
     | "monitoring"
     | "reporting";
-  technology: "Starknet" | "ChippyPay" | "CSV" | "Reporting";
+  technology: "Monad" | "Solidity" | "CSV" | "Reporting";
   inputs?: {
     type: "number" | "text" | "address" | "select" | "file" | "textarea";
     label: string;
