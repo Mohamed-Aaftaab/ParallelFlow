@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env.local
+*.log
+.DS_Store
+*.md
+/backend/token-contract/target
+/backend/contract-deployment/target
+/backend/openzeppelin-nft/target
+backend/.env
