@@ -25,13 +25,12 @@ export async function POST(request: NextRequest) {
     const account = privateKeyToAccount(cleanKey as `0x${string}`);
     const address = account.address;
 
-    console.log("✅ Derived EVM wallet address:", address);
+    // Address derived successfully — do not log sensitive data
 
     return NextResponse.json({
       success: true,
       address: address,
-      publicKey: account.publicKey,
-      isDeployed: true
+      // publicKey omitted — not needed by frontend and reduces sensitive data exposure
     });
   } catch (error: any) {
     console.error("❌ Error deriving EVM wallet address:", error);

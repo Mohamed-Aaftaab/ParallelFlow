@@ -53,7 +53,13 @@ const BlockInput: React.FC<BlockInputProps> = ({ input, value, onChange }) => {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
-            onChange(file.name);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const content = event.target?.result as string;
+              onChange(content || file.name);
+            };
+            reader.onerror = () => onChange(file.name);
+            reader.readAsText(file);
           }
         }}
         className="w-full border-2 border-black rounded-lg shadow-[2px_2px_0_0_rgba(0,0,0,1)]"

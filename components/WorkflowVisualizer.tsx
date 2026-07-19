@@ -25,9 +25,6 @@ const WorkflowVisualizer: React.FC<WorkflowVisualizerProps> = ({
   values,
   wallet,
 }) => {
-  // Debug: Log wallet prop
-  console.log("🐛 DEBUG: WorkflowVisualizer received wallet:", wallet);
-  
   const [logs, setLogs] = useState<Log[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(-1);
   const [isExecuting, setIsExecuting] = useState(false);

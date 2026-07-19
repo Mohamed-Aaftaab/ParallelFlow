@@ -1,4 +1,4 @@
-import { createPublicClient, http, isAddress, formatEther } from "viem";
+import { createPublicClient, http, isAddress, formatEther, formatUnits } from "viem";
 
 const RPC_URL = process.env.NEXT_PUBLIC_MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
 
@@ -76,7 +76,7 @@ export async function getERC20Balance(tokenAddress: string, walletAddress: strin
       }).catch(() => 0n),
     ]);
 
-    return (Number(balance) / 10 ** decimals).toString();
+    return formatUnits(balance as bigint, decimals as number);
   } catch (error) {
     console.error("Error getting ERC20 balance:", error);
     return "0";

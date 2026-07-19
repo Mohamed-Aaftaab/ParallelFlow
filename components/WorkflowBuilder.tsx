@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BlockType, BlockValues } from "@/types";
+import ContractBuilderBlock from "./ContractBuilderBlock";
 
 const ScrollButtons: React.FC<{
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -220,15 +221,21 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ wallet }) => {
   };
 
   const removeBlock = (index: number) => {
-    setChainBlocks((prev) => {
-      const newBlocks = prev.filter((_, i) => i !== index);
-      const newValues = { ...blockValues };
-      for (let i = index; i < prev.length; i++) {
-        delete newValues[`chain-${i}`];
+    // Remap blockValues: shift all keys above `index` down by 1
+    const newValues: typeof blockValues = {};
+    Object.keys(blockValues).forEach((key) => {
+      const match = key.match(/^chain-(\d+)$/);
+      if (!match) return;
+      const i = parseInt(match[1]);
+      if (i < index) {
+        newValues[key] = blockValues[key]; // keep as-is
+      } else if (i > index) {
+        newValues[`chain-${i - 1}`] = blockValues[key]; // shift down
       }
-      setBlockValues(newValues);
-      return newBlocks;
+      // i === index is deleted — do nothing
     });
+    setBlockValues(newValues);
+    setChainBlocks((prev) => prev.filter((_, i) => i !== index));
   };
 
   const isCompatibleWithChain = (block: BlockType): boolean => {
@@ -289,6 +296,23 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ wallet }) => {
         </div>
 
         <AvailablePieces onDragStart={handleDragStart} onAddBlock={handleAddBlock} chainBlocks={chainBlocks} />
+
+        {chainBlocks.some((b) => b.id === "deploy_contract") && (
+          <div className="bg-white border-4 border-black rounded-3xl p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)]">
+            <ContractBuilderBlock
+              onContractGenerated={(code, name) => {
+                chainBlocks.forEach((block, idx) => {
+                  if (block.id === "deploy_contract") {
+                    handleValueChange(`chain-${idx}`, "Solidity Contract Code", code);
+                    if (name) {
+                      handleValueChange(`chain-${idx}`, "Contract Name", name);
+                    }
+                  }
+                });
+              }}
+            />
+          </div>
+        )}
 
         <Card
           className="bg-white border-4 border-black rounded-3xl shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] hover:translate-y-[-2px] transition-all duration-300"

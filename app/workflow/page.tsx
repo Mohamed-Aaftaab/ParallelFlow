@@ -35,6 +35,7 @@ export default function WorkflowPage() {
     setWallet(null);
     localStorage.removeItem("connectedWallet");
     localStorage.removeItem("wallet_private_key");
+    sessionStorage.removeItem("wallet_private_key");
   };
 
   if (isLoading) {

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Build contract with Agentic Stark
     const result = await buildContractWithAgenticStark({
       instructions,
-      contractType: contractType || "Cairo",
+      contractType: contractType || "Solidity",
       contractName: contractName || "GeneratedContract",
     });
 

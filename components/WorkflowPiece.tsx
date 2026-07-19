@@ -68,7 +68,7 @@ const WorkflowPiece: React.FC<WorkflowPieceProps> = ({
     return `Current chain expects: ${compatibleBlockNames}`;
   };
 
-  const PieceContent = () => {
+  const renderPieceContent = () => {
     return (
       <div
         className={cn(
@@ -264,7 +264,7 @@ const WorkflowPiece: React.FC<WorkflowPieceProps> = ({
               isGreyedOut && "opacity-50 cursor-not-allowed"
             )}
           >
-            <PieceContent />
+            {renderPieceContent()}
           </TooltipTrigger>
           <TooltipContent
             side="bottom"
@@ -293,7 +293,7 @@ const WorkflowPiece: React.FC<WorkflowPieceProps> = ({
         isGreyedOut && "opacity-50"
       )}
     >
-      <PieceContent />
+      {renderPieceContent()}
     </div>
   );
 };

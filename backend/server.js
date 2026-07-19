@@ -7,7 +7,25 @@ const { privateKeyToAccount } = require("viem/accounts");
 require("dotenv").config({ path: path.join(__dirname, "../.env.local") });
 
 const app = express();
-app.use(cors());
+// Restrict CORS to known origins only
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://parallelflow.netlify.app",
+  "https://parallelflow.vercel.app",
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, same-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.some(o => origin.startsWith(o))) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS policy: origin ${origin} not allowed`), false);
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 app.use(express.text({ type: "text/plain" }));
 
@@ -182,9 +200,9 @@ app.post("/create-token", async (req, res) => {
 
   } catch (error) {
     console.error("Token deployment error:", error);
-    let msg = error.message;
-    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance") || msg.includes("500")) {
-      msg = `Deployer account (${account.address}) needs MON testnet tokens. Please send 0.1 MON to ${account.address} or connect your browser wallet (MetaMask) to deploy directly. Details: ${error.message}`;
+    let msg = error.message || "Unknown deployment error";
+    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance")) {
+      msg = `Deployer account needs MON testnet tokens. Connect your browser wallet (MetaMask) to deploy directly. Details: ${error.message}`;
     }
     return res.status(500).json({ error: msg });
   }

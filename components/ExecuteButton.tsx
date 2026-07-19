@@ -6,6 +6,7 @@ import { BlockType, BlockValues } from "@/types";
 import { validateWallet } from "@/services/validateWallet";
 import { validateReceiverAddress } from "@/services/validateReceiver";
 import { transferToken } from "@/services/transferToken";
+import { monadClient } from "@/services/monad";
 import {
   createToken,
   deployContract,
@@ -36,6 +37,28 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
 }) => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [txHashes, setTxHashes] = useState<string[]>([]);
+  const [failedSteps, setFailedSteps] = useState<number>(0);
+
+  /**
+   * Pre-flight validation: check all required inputs are filled before execution.
+   * Returns an error message string or null if everything is valid.
+   */
+  const validateInputs = (): string | null => {
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const blockValues = values[`chain-${i}`] || {};
+      if (!block.inputs) continue;
+      for (const input of block.inputs) {
+        if (input.required) {
+          const val = blockValues[input.label];
+          if (!val || val.trim() === "") {
+            return `Block "${block.name}" (step ${i + 1}): "${input.label}" is required.`;
+          }
+        }
+      }
+    }
+    return null;
+  };
 
   const simulateStepExecution = async (
     block: BlockType,
@@ -45,6 +68,10 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     onLog(`Starting Action: ${block.name}`, "info");
 
     const walletAddress = wallet?.address || "0x0000000000000000000000000000000000000000";
+    // Read private key from sessionStorage (never localStorage — security fix)
+    const privateKey = typeof window !== "undefined"
+      ? (sessionStorage.getItem("wallet_private_key") || "")
+      : "";
 
     if (block.id === "connect_wallet") {
       const walletType = blockValues["Wallet Type"] || "Browser Wallet Extension";
@@ -122,7 +149,7 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
 
       let privateKey = "";
       if (typeof window !== "undefined") {
-        privateKey = localStorage.getItem("wallet_private_key") || "";
+        privateKey = sessionStorage.getItem("wallet_private_key") || "";
       }
 
       onLog(`💸 Submitting ${token} transfer transaction...`, "info");
@@ -274,16 +301,46 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     } 
     
     else if (block.id === "check_tx_status") {
-      onLog(`🔍 Checking status of executed transactions...`, "info");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      onLog(`✓ All transactions successfully confirmed in Monad blocks`, "success");
+      onLog(`🔍 Verifying status of ${txHashes.length} on-chain transaction(s)...`, "info");
+
+      if (txHashes.length === 0) {
+        onLog(`ℹ️ No on-chain transactions to verify in this workflow yet.`, "info");
+        return;
+      }
+
+      let confirmed = 0;
+      let failed = 0;
+      for (const hash of txHashes) {
+        try {
+          const receipt = await monadClient.getTransactionReceipt({
+            hash: hash as `0x${string}`
+          });
+          if (receipt && receipt.status === "success") {
+            onLog(`  ✓ ${hash.slice(0, 10)}...${hash.slice(-6)} → Confirmed in block ${receipt.blockNumber}`, "success");
+            confirmed++;
+          } else if (receipt && receipt.status === "reverted") {
+            onLog(`  ✗ ${hash.slice(0, 10)}...${hash.slice(-6)} → Reverted on-chain`, "error");
+            failed++;
+          } else {
+            onLog(`  ⚠ ${hash.slice(0, 10)}...${hash.slice(-6)} → Pending/unknown status`, "warning");
+          }
+        } catch (e: any) {
+          onLog(`  ⚠ Could not fetch receipt for ${hash.slice(0, 10)}...: ${e.message}`, "warning");
+        }
+      }
+      onLog(`✓ Verification complete: ${confirmed} confirmed, ${failed} reverted`, confirmed > 0 ? "success" : "warning");
     } 
     
     else if (block.id === "transaction_summary") {
-      onLog(`📊 Compiling ParallelFlow execution report...`, "info");
-      onLog(`✓ Total Transactions executed: ${txHashes.length}`, "success");
-      onLog(`✓ Average confirmation latency: 1.05 seconds`, "success");
-      onLog(`✓ Success Rate: 100%`, "success");
+      const totalTx = txHashes.length;
+      const successCount = totalTx - failedSteps;
+      const successRate = totalTx > 0 ? Math.round((successCount / totalTx) * 100) : 0;
+      onLog(`📊 ParallelFlow Execution Summary`, "info");
+      onLog(`✓ On-chain Transactions submitted: ${totalTx}`, "success");
+      onLog(`✓ Successful: ${successCount} | Failed: ${failedSteps}`, successCount === totalTx ? "success" : "warning");
+      onLog(`✓ Success Rate: ${successRate}%`, successRate === 100 ? "success" : "warning");
+      onLog(`✓ Network: Monad Testnet (Chain ID 10143)`, "info");
+      onLog(`✓ Wallet: ${wallet?.address || "N/A"}`, "info");
     } 
     
     else if (block.id === "export_report") {
@@ -306,22 +363,29 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
             network: "Monad Testnet (Chain ID 10143)",
             wallet: walletAddress,
             transactionCount: txHashes.length,
+            successCount: txHashes.length - failedSteps,
+            failedCount: failedSteps,
+            successRate: txHashes.length > 0 ? `${Math.round(((txHashes.length - failedSteps) / txHashes.length) * 100)}%` : "N/A",
             transactionHashes: txHashes,
+            // Map tx hashes to blocks that produced them (only blocks that submit txs)
+            transactionMap: txHashes.map((hash, i) => ({ index: i + 1, hash })),
             blocksExecuted: blocks.map((b, i) => ({ step: i + 1, name: b.name, category: b.category })),
           };
           content = JSON.stringify(reportData, null, 2);
         } else {
           mimeType = "text/csv";
-          const headers = "Step,Block Name,Category,Technology,Status,Transaction Hash\n";
+          const headers = "Step,Block Name,Category,Technology,Status\n";
           const rows = blocks
             .map(
               (b, i) =>
-                `${i + 1},"${b.name}","${b.category}","${b.technology}","SUCCESS","${
-                  txHashes[i] || "Confirmed"
-                }"`
+                `${i + 1},"${b.name}","${b.category}","${b.technology}","EXECUTED"`
             )
             .join("\n");
-          content = headers + rows;
+          // Append tx hashes as a separate section
+          const txSection = txHashes.length > 0
+            ? `\n\nTransaction Hashes\n${txHashes.map((h, i) => `${i + 1},"${h}"`).join("\n")}`
+            : "";
+          content = headers + rows + txSection;
         }
 
         const blob = new Blob([content], { type: mimeType });

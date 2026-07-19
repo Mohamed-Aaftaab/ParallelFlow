@@ -21,7 +21,7 @@ export default function ContractBuilderBlock({
   onError 
 }: ContractBuilderBlockProps) {
   const [instructions, setInstructions] = useState("");
-  const [contractType, setContractType] = useState("Cairo");
+  const [contractType, setContractType] = useState("Solidity");
   const [contractName, setContractName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);

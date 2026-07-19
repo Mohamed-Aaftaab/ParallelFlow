@@ -170,10 +170,11 @@ export default function WalletSelector({ onWalletConnected }: WalletSelectorProp
         type: "Private Key",
       };
 
-      console.log("✅ EVM Wallet loaded from private key:", walletData);
-      
-      localStorage.setItem("wallet_private_key", cleanKey);
-      
+      console.log("✅ EVM Wallet loaded from private key");
+
+      // Store key in sessionStorage only (cleared when tab closes), never localStorage
+      sessionStorage.setItem("wallet_private_key", cleanKey);
+
       onWalletConnected(walletData);
     } catch (err: any) {
       console.error("❌ Failed to load wallet from private key:", err);
