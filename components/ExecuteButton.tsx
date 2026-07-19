@@ -178,7 +178,7 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
           symbol: tokenSymbol,
           max_token: parseInt(initialSupply),
           decimals: parseInt(decimals),
-        });
+        }, walletAddress);
 
         if (result.success && result.contractAddress) {
           onLog(`✓ ERC-20 contract successfully deployed to Monad!`, "success");
@@ -211,7 +211,7 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
           name: nftName,
           symbol: nftSymbol,
           base_uri: baseUri,
-        });
+        }, walletAddress);
 
         if (result.success && result.contractAddress) {
           onLog(`✓ NFT contract successfully deployed to Monad!`, "success");
@@ -275,7 +275,7 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
         const result = await deployContract({
           cairoCode: solidityCode,
           contractName: contractName,
-        });
+        }, walletAddress);
 
         if (result.success && result.contractAddress) {
           onLog(`✓ Custom Solidity contract successfully deployed!`, "success");

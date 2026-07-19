@@ -2,8 +2,17 @@ import { createPublicClient, http, isAddress, formatEther } from "viem";
 
 const RPC_URL = process.env.NEXT_PUBLIC_MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
 
+export const monadTestnet = {
+  id: 10143,
+  name: "Monad Testnet",
+  nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
+  rpcUrls: { default: { http: [RPC_URL] } },
+  blockExplorers: { default: { name: "MonadExplorer", url: "https://testnet.monadexplorer.com" } },
+} as const;
+
 // Create public client for Monad Testnet
 export const monadClient = createPublicClient({
+  chain: monadTestnet,
   transport: http(RPC_URL),
 });
 

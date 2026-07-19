@@ -137,11 +137,16 @@ app.post("/create-token", async (req, res) => {
     console.log("Compiling ERC-20 contract...");
     const { abi, bytecode } = compileSolidity("ParallelToken", erc20Sol);
 
+    if (req.body.compile_only) {
+      return res.json({ success: true, abi, bytecode, args: [name, symbol, max_token.toString(), decimals.toString()] });
+    }
+
     console.log("Deploying ERC-20 to Monad...");
     const hash = await walletClient.deployContract({
       abi,
       bytecode,
-      args: [name, symbol, BigInt(max_token), parseInt(decimals)]
+      args: [name, symbol, BigInt(max_token), parseInt(decimals)],
+      gas: 3000000n
     });
 
     const receipt = await walletClient.waitForTransactionReceipt({ hash });
@@ -158,7 +163,11 @@ app.post("/create-token", async (req, res) => {
 
   } catch (error) {
     console.error("Token deployment error:", error);
-    return res.status(500).json({ error: error.message });
+    let msg = error.message;
+    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance") || msg.includes("500")) {
+      msg = `Deployer account (${account.address}) needs MON testnet tokens. Please send 0.1 MON to ${account.address} or connect your browser wallet (MetaMask) to deploy directly. Details: ${error.message}`;
+    }
+    return res.status(500).json({ error: msg });
   }
 });
 
@@ -217,11 +226,16 @@ app.post("/deploy-nft", async (req, res) => {
     console.log("Compiling NFT contract...");
     const { abi, bytecode } = compileSolidity("ParallelNFT", erc721Sol);
 
+    if (req.body.compile_only) {
+      return res.json({ success: true, abi, bytecode, args: [name, symbol, base_uri] });
+    }
+
     console.log("Deploying NFT to Monad...");
     const hash = await walletClient.deployContract({
       abi,
       bytecode,
-      args: [name, symbol, base_uri]
+      args: [name, symbol, base_uri],
+      gas: 3000000n
     });
 
     const receipt = await walletClient.waitForTransactionReceipt({ hash });
@@ -238,7 +252,11 @@ app.post("/deploy-nft", async (req, res) => {
 
   } catch (error) {
     console.error("NFT deployment error:", error);
-    return res.status(500).json({ error: error.message });
+    let msg = error.message;
+    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance") || msg.includes("500")) {
+      msg = `Deployer account (${account.address}) needs MON testnet tokens. Please send 0.1 MON to ${account.address}. Details: ${error.message}`;
+    }
+    return res.status(500).json({ error: msg });
   }
 });
 
@@ -310,10 +328,15 @@ app.post("/deploy-contract", async (req, res) => {
     console.log("Compiling custom Solidity contract...");
     const { abi, bytecode } = compileSolidity("CustomContract", solidityCode);
 
+    if (req.body.compile_only) {
+      return res.json({ success: true, abi, bytecode, args: [] });
+    }
+
     console.log("Deploying custom contract to Monad...");
     const hash = await walletClient.deployContract({
       abi,
-      bytecode
+      bytecode,
+      gas: 3000000n
     });
 
     const receipt = await walletClient.waitForTransactionReceipt({ hash });
@@ -328,7 +351,11 @@ app.post("/deploy-contract", async (req, res) => {
 
   } catch (error) {
     console.error("Custom contract deployment error:", error);
-    return res.status(500).json({ error: error.message });
+    let msg = error.message;
+    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance") || msg.includes("500")) {
+      msg = `Deployer account (${account.address}) needs MON testnet tokens. Please send 0.1 MON to ${account.address}. Details: ${error.message}`;
+    }
+    return res.status(500).json({ error: msg });
   }
 });
 
