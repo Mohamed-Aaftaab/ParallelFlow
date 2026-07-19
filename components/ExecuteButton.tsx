@@ -159,14 +159,10 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     } 
     
     else if (block.id === "create_token") {
-      const tokenName = blockValues["Token Name"];
-      const tokenSymbol = blockValues["Token Symbol"];
-      const initialSupply = blockValues["Initial Supply"];
+      const tokenName = blockValues["Token Name"] || "My Monad Token";
+      const tokenSymbol = blockValues["Token Symbol"] || "MMT";
+      const initialSupply = blockValues["Initial Supply"] || "1000000";
       const decimals = blockValues["Decimals"] || "18";
-
-      if (!tokenName || !tokenSymbol || !initialSupply) {
-        throw new Error("Token name, symbol, and initial supply are required");
-      }
 
       onLog(`🪙 Deploying Solidity ERC-20 token to Monad Testnet...`, "info");
       onLog(`   Name: ${tokenName} (${tokenSymbol})`, "info");
@@ -195,13 +191,9 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     } 
     
     else if (block.id === "deploy_nft") {
-      const nftName = blockValues["NFT Name"];
-      const nftSymbol = blockValues["NFT Symbol"];
-      const baseUri = blockValues["Base URI"];
-
-      if (!nftName || !nftSymbol || !baseUri) {
-        throw new Error("NFT name, symbol, and base URI are required");
-      }
+      const nftName = blockValues["NFT Name"] || "Monad Sparks NFT";
+      const nftSymbol = blockValues["NFT Symbol"] || "MSARK";
+      const baseUri = blockValues["Base URI"] || "https://api.myproject.com/metadata/";
 
       onLog(`🖼️ Deploying ERC-721 NFT collection contract on Monad Testnet...`, "info");
       onLog(`   Collection Name: ${nftName}`, "info");
@@ -228,13 +220,9 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     } 
     
     else if (block.id === "mint_nft") {
-      const contractAddress = blockValues["NFT Contract Address"];
-      const recipientAddress = blockValues["Recipient Address"];
-      const tokenUri = blockValues["Token URI"];
-
-      if (!contractAddress || !recipientAddress || !tokenUri) {
-        throw new Error("Contract address, recipient address, and token URI are required");
-      }
+      const contractAddress = blockValues["NFT Contract Address"] || "0x0000000000000000000000000000000000000000";
+      const recipientAddress = blockValues["Recipient Address"] || walletAddress;
+      const tokenUri = blockValues["Token URI"] || "token-metadata.json";
 
       onLog(`🎨 Minting NFT item from collection...`, "info");
       onLog(`   Contract: ${contractAddress}`, "info");
@@ -261,12 +249,8 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     } 
     
     else if (block.id === "deploy_contract") {
-      const solidityCode = blockValues["Solidity Contract Code"];
-      const contractName = blockValues["Contract Name"] || "CustomSolidity";
-
-      if (!solidityCode) {
-        throw new Error("Solidity code is required");
-      }
+      const solidityCode = blockValues["Solidity Contract Code"] || `// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract CustomContract {\n    uint256 public count;\n    function increment() public {\n        count += 1;\n    }\n}`;
+      const contractName = blockValues["Contract Name"] || "CustomContract";
 
       onLog(`📄 Compiling & deploying Solidity contract to Monad...`, "info");
       onLog(`   Contract Name: ${contractName}`, "info");
