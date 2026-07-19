@@ -18,7 +18,7 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (curl, Postman, same-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.some(o => origin.startsWith(o))) {
+    if (origin.includes("localhost") || origin.endsWith(".vercel.app") || origin.endsWith(".netlify.app") || origin.endsWith(".onrender.com")) {
       return callback(null, true);
     }
     return callback(new Error(`CORS policy: origin ${origin} not allowed`), false);
