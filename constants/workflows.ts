@@ -98,7 +98,7 @@ export const blocks: BlockType[] = [
       {
         type: "select",
         label: "Token",
-        options: ["MON", "USDT", "USDC", "WETH"],
+        options: ["MON"],
         required: true,
         defaultValue: "MON",
       },
@@ -122,7 +122,7 @@ export const blocks: BlockType[] = [
     name: "Batch Transfer Engine",
     color: "from-amber-400 to-amber-600",
     icon: Zap,
-    description: "Execute batch transfers of MON or ERC-20 tokens using MonadWorkflowExecutor.sol",
+    description: "Execute high-speed sequential MON transfers to multiple recipients on Monad Testnet",
     category: "transfer",
     technology: "Monad",
     inputs: [

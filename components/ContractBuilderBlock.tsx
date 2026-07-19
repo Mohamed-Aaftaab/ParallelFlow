@@ -46,7 +46,11 @@ export default function ContractBuilderBlock({
 
       if (response.success) {
         setResult(response);
-        onContractGenerated?.(response.contractCode, response.contractName, response.contractType);
+        onContractGenerated?.(
+          response.contractCode ?? "",
+          response.contractName ?? "GeneratedContract",
+          response.contractType ?? "Solidity"
+        );
       } else {
         setError(response.error || "Failed to build contract");
         onError?.(response.error || "Failed to build contract");

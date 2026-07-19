@@ -13,10 +13,20 @@ app.use(express.text({ type: "text/plain" }));
 
 // Load configurations
 const rpcUrl = process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
-const privateKey = process.env.MONAD_DEPLOYER_PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const privateKey = process.env.MONAD_DEPLOYER_PRIVATE_KEY;
 
-const account = privateKeyToAccount(privateKey);
-const walletClient = createWalletClient({
+// Validate that a real private key is configured
+if (!privateKey || privateKey === "YOUR_MONAD_TESTNET_PRIVATE_KEY_HERE" || privateKey.length < 60) {
+  console.warn("⚠️  MONAD_DEPLOYER_PRIVATE_KEY not configured in .env.local");
+  console.warn("    Backend server-side deployment disabled. All deployments will use browser wallet (MetaMask).");
+  console.warn("    To enable backend deployment: set MONAD_DEPLOYER_PRIVATE_KEY in .env.local");
+}
+
+const account = privateKey && privateKey !== "YOUR_MONAD_TESTNET_PRIVATE_KEY_HERE" && privateKey.length >= 60
+  ? privateKeyToAccount(privateKey)
+  : null;
+
+const walletClient = account ? createWalletClient({
   account,
   chain: {
     id: 10143,
@@ -25,9 +35,14 @@ const walletClient = createWalletClient({
     rpcUrls: { default: { http: [rpcUrl] } }
   },
   transport: http(rpcUrl)
-}).extend(publicActions);
+}).extend(publicActions) : null;
 
-console.log("🚀 ParallelFlow Backend initialized. Deployer Address:", account.address);
+console.log("🚀 ParallelFlow Backend initialized.");
+if (account) {
+  console.log("   Deployer Address:", account.address);
+} else {
+  console.log("   Mode: Compile-only (browser wallet required for deployment)");
+}
 
 /**
  * Standard Solidity compilation helper
@@ -141,6 +156,10 @@ app.post("/create-token", async (req, res) => {
       return res.json({ success: true, abi, bytecode, args: [name, symbol, max_token.toString(), decimals.toString()] });
     }
 
+    if (!walletClient) {
+      return res.status(400).json({ error: "Backend deployer not configured. Connect via MetaMask/Rabby browser wallet to deploy." });
+    }
+
     console.log("Deploying ERC-20 to Monad...");
     const hash = await walletClient.deployContract({
       abi,
@@ -149,7 +168,7 @@ app.post("/create-token", async (req, res) => {
       gas: 3000000n
     });
 
-    const receipt = await walletClient.waitForTransactionReceipt({ hash });
+    const receipt = await walletClient.waitForTransactionReceipt({ hash, timeout: 60000 });
     const explorerUrl = `https://testnet.monadexplorer.com/tx/${hash}`;
 
     return res.status(201).json({
@@ -230,6 +249,10 @@ app.post("/deploy-nft", async (req, res) => {
       return res.json({ success: true, abi, bytecode, args: [name, symbol, base_uri] });
     }
 
+    if (!walletClient) {
+      return res.status(400).json({ error: "Backend deployer not configured. Connect via MetaMask/Rabby browser wallet to deploy." });
+    }
+
     console.log("Deploying NFT to Monad...");
     const hash = await walletClient.deployContract({
       abi,
@@ -238,7 +261,7 @@ app.post("/deploy-nft", async (req, res) => {
       gas: 3000000n
     });
 
-    const receipt = await walletClient.waitForTransactionReceipt({ hash });
+    const receipt = await walletClient.waitForTransactionReceipt({ hash, timeout: 60000 });
     const explorerUrl = `https://testnet.monadexplorer.com/tx/${hash}`;
 
     return res.status(201).json({
@@ -253,8 +276,8 @@ app.post("/deploy-nft", async (req, res) => {
   } catch (error) {
     console.error("NFT deployment error:", error);
     let msg = error.message;
-    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance") || msg.includes("500")) {
-      msg = `Deployer account (${account.address}) needs MON testnet tokens. Please send 0.1 MON to ${account.address}. Details: ${error.message}`;
+    if (msg && (msg.includes("intrinsic gas") || msg.includes("exceeds the balance"))) {
+      msg = `Deployer account needs MON testnet tokens. Connect your browser wallet (MetaMask) to deploy directly. Details: ${error.message}`;
     }
     return res.status(500).json({ error: msg });
   }
@@ -284,6 +307,10 @@ app.post("/mint-nft", async (req, res) => {
       }
     ];
 
+    if (!walletClient) {
+      return res.status(400).json({ error: "Backend deployer not configured. Connect via MetaMask/Rabby browser wallet to mint." });
+    }
+
     console.log("Minting NFT item...");
     const hash = await walletClient.writeContract({
       address: contract_address,
@@ -292,7 +319,7 @@ app.post("/mint-nft", async (req, res) => {
       args: [recipient, uri]
     });
 
-    await walletClient.waitForTransactionReceipt({ hash });
+    await walletClient.waitForTransactionReceipt({ hash, timeout: 60000 });
     const explorerUrl = `https://testnet.monadexplorer.com/tx/${hash}`;
 
     return res.json({
@@ -332,6 +359,10 @@ app.post("/deploy-contract", async (req, res) => {
       return res.json({ success: true, abi, bytecode, args: [] });
     }
 
+    if (!walletClient) {
+      return res.status(400).json({ error: "Backend deployer not configured. Connect via MetaMask/Rabby browser wallet to deploy." });
+    }
+
     console.log("Deploying custom contract to Monad...");
     const hash = await walletClient.deployContract({
       abi,
@@ -339,7 +370,7 @@ app.post("/deploy-contract", async (req, res) => {
       gas: 3000000n
     });
 
-    const receipt = await walletClient.waitForTransactionReceipt({ hash });
+    const receipt = await walletClient.waitForTransactionReceipt({ hash, timeout: 60000 });
     const explorerUrl = `https://testnet.monadexplorer.com/tx/${hash}`;
 
     return res.status(201).json({
@@ -352,8 +383,8 @@ app.post("/deploy-contract", async (req, res) => {
   } catch (error) {
     console.error("Custom contract deployment error:", error);
     let msg = error.message;
-    if (msg.includes("intrinsic gas") || msg.includes("exceeds the balance") || msg.includes("500")) {
-      msg = `Deployer account (${account.address}) needs MON testnet tokens. Please send 0.1 MON to ${account.address}. Details: ${error.message}`;
+    if (msg && (msg.includes("intrinsic gas") || msg.includes("exceeds the balance"))) {
+      msg = `Deployer account needs MON testnet tokens. Connect your browser wallet (MetaMask) to deploy directly. Details: ${error.message}`;
     }
     return res.status(500).json({ error: msg });
   }

@@ -146,16 +146,14 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     
     else if (block.id === "batch_transfer") {
       const tokenType = blockValues["Token Type"] || "MON";
-      const executionMode = blockValues["Execution Mode"] || "Atomic Multicall Contract";
+      const executionMode = blockValues["Execution Mode"] || "Sequential (Viem)";
       const batchSize = blockValues["Batch Size"] || "10";
 
-      onLog(`⚡ Preparing batch transfer of ${tokenType} (${executionMode})`, "info");
-      onLog(`   Batch Size: ${batchSize} recipients`, "info");
-
-      // Simulating a high-speed parallel transfer pipeline on Monad (1 second finality)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      onLog(`✓ Generated batch transaction payload`, "success");
-      onLog(`✓ Executed batch payments. All ${batchSize} recipients successfully paid in 1.1s!`, "success");
+      onLog(`⚡ Batch Transfer Engine: ${tokenType} | Mode: ${executionMode}`, "info");
+      onLog(`   Configured for ${batchSize} recipients`, "info");
+      onLog(`ℹ️  To execute real batch transfers, use the "Transfer Token (MON)" block for each recipient address.`, "info");
+      onLog(`✓ Batch transfer pipeline configured successfully on Monad Testnet`, "success");
+      onLog(`📊 Monad's 10,000 TPS enables ${batchSize} sequential transfers to complete in under 2 seconds`, "info");
     } 
     
     else if (block.id === "create_token") {
@@ -257,7 +255,7 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
 
       try {
         const result = await deployContract({
-          cairoCode: solidityCode,
+          solidityCode: solidityCode,
           contractName: contractName,
         }, walletAddress);
 

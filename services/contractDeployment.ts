@@ -17,7 +17,7 @@ export interface CreateTokenParams {
 }
 
 export interface DeployContractParams {
-  cairoCode: string; // This holds the raw Solidity code
+  solidityCode: string;
   contractName?: string;
 }
 
@@ -159,7 +159,7 @@ export async function deployContract(
         const compileRes = await fetch(`${BASE_URL}/deploy-contract`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: params.cairoCode, compile_only: true }),
+          body: JSON.stringify({ code: params.solidityCode, compile_only: true }),
         });
 
         if (compileRes.ok) {
@@ -181,7 +181,7 @@ export async function deployContract(
     const response = await fetch(`${BASE_URL}/deploy-contract`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: params.cairoCode }),
+      body: JSON.stringify({ code: params.solidityCode }),
     });
 
     if (!response.ok) {

@@ -13,7 +13,9 @@ export interface TransferResult {
 }
 
 /**
- * Transfer native MON or standard ERC-20 tokens
+ * Transfer native MON tokens on Monad Testnet.
+ * Only MON (native) transfers are supported. ERC-20 transfers require
+ * a deployed token contract address.
  */
 export async function transferToken(
   token: "MON" | "USDT" | "USDC" | "WETH",
@@ -39,6 +41,15 @@ export async function transferToken(
       throw new Error("Invalid transfer amount");
     }
 
+    // Only native MON transfers are supported on-chain.
+    // USDT/USDC/WETH require a real deployed contract address on Monad Testnet.
+    if (token !== "MON") {
+      throw new Error(
+        `${token} is not yet deployed on Monad Testnet. Only native MON transfers are supported. ` +
+        `To transfer ERC-20 tokens, deploy a token first using the "Deploy ERC-20 Token" block and use its contract address.`
+      );
+    }
+
     let txHash: `0x${string}`;
 
     // Mode A: Connected via Browser Extension (MetaMask/Rabby)
@@ -55,42 +66,11 @@ export async function transferToken(
         transport: custom(ethereum)
       });
 
-      if (token === "MON") {
-        txHash = await walletClient.sendTransaction({
-          account: walletAddress as `0x${string}`,
-          to: receiverAddress as `0x${string}`,
-          value: parseEther(amount)
-        });
-      } else {
-        // Simple mock ERC-20 transfer ABI
-        const erc20Abi = [
-          {
-            name: "transfer",
-            type: "function",
-            stateMutability: "nonpayable",
-            inputs: [
-              { name: "recipient", type: "address" },
-              { name: "amount", type: "uint256" }
-            ],
-            outputs: [{ name: "", type: "bool" }]
-          }
-        ] as const;
-
-        // Use mock address or custom address
-        const tokenAddress = token === "USDT" 
-          ? "0x8888888888888888888888888888888888888888" 
-          : "0x9999999999999999999999999999999999999999";
-
-        const { request } = await monadClient.simulateContract({
-          account: walletAddress as `0x${string}`,
-          address: tokenAddress as `0x${string}`,
-          abi: erc20Abi,
-          functionName: "transfer",
-          args: [receiverAddress as `0x${string}`, parseEther(amount)]
-        });
-
-        txHash = await walletClient.writeContract(request);
-      }
+      txHash = await walletClient.sendTransaction({
+        account: walletAddress as `0x${string}`,
+        to: receiverAddress as `0x${string}`,
+        value: parseEther(amount)
+      });
     }
     // Mode B: Connected via Private Key
     else if (privateKey) {
@@ -107,52 +87,26 @@ export async function transferToken(
         transport: http("https://testnet-rpc.monad.xyz")
       });
 
-      if (token === "MON") {
-        txHash = await walletClient.sendTransaction({
-          to: receiverAddress as `0x${string}`,
-          value: parseEther(amount)
-        });
-      } else {
-        const erc20Abi = [
-          {
-            name: "transfer",
-            type: "function",
-            stateMutability: "nonpayable",
-            inputs: [
-              { name: "recipient", type: "address" },
-              { name: "amount", type: "uint256" }
-            ],
-            outputs: [{ name: "", type: "bool" }]
-          }
-        ] as const;
-
-        const tokenAddress = token === "USDT" 
-          ? "0x8888888888888888888888888888888888888888" 
-          : "0x9999999999999999999999999999999999999999";
-
-        const { request } = await monadClient.simulateContract({
-          account,
-          address: tokenAddress as `0x${string}`,
-          abi: erc20Abi,
-          functionName: "transfer",
-          args: [receiverAddress as `0x${string}`, parseEther(amount)]
-        });
-
-        txHash = await walletClient.writeContract(request);
-      }
+      txHash = await walletClient.sendTransaction({
+        to: receiverAddress as `0x${string}`,
+        value: parseEther(amount)
+      });
     } else {
       throw new Error("No wallet connection available to sign transaction");
     }
 
-    console.log(`✅ Transfer submitted. Hash: ${txHash}`);
+    console.log(`✅ Transfer submitted. Hash: ${txHash!}`);
 
-    // Wait for receipt
-    const receipt = await monadClient.waitForTransactionReceipt({ hash: txHash });
+    // Wait for receipt with a 60-second timeout to prevent infinite hang
+    const receipt = await monadClient.waitForTransactionReceipt({
+      hash: txHash!,
+      timeout: 60_000,
+    });
     console.log(`✅ Transfer confirmed in block ${receipt.blockNumber}`);
 
     return {
       success: receipt.status === "success",
-      transactionHash: txHash,
+      transactionHash: txHash!,
       details: {
         token,
         from: walletAddress,

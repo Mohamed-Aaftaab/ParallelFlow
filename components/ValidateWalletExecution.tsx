@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import {
   validateWallet,
-  formatValidationResult,
   type WalletValidationResult,
   type Token,
 } from "@/services/validateWallet";
@@ -22,7 +21,7 @@ import {
 interface ValidateWalletExecutionProps {
   walletAddress: string;
   validationType: "Quick Check" | "Full Validation" | "With Token Scan";
-  minimumBalanceCheck: "Skip" | "Check ETH Only" | "Check All Tokens";
+  minimumBalanceCheck: "Skip" | "Check MON Only" | "Check All Tokens";
   onComplete?: (result: WalletValidationResult) => void;
 }
 

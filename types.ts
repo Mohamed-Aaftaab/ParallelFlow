@@ -13,6 +13,7 @@ export interface BlockType {
     | "balance"
     | "approval"
     | "transfer"
+    | "deployment"
     | "monitoring"
     | "reporting";
   technology: "Monad" | "Solidity" | "CSV" | "Reporting";
