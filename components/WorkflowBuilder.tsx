@@ -105,15 +105,19 @@ const ScrollableArea: React.FC<{
 
 const AvailablePieces: React.FC<{
   onDragStart: (block: BlockType) => () => void;
+  onAddBlock: (block: BlockType) => void;
   chainBlocks: BlockType[];
-}> = ({ onDragStart, chainBlocks }) => {
+}> = ({ onDragStart, onAddBlock, chainBlocks }) => {
   const technologies = getAvailableTechnologies();
 
   return (
     <Card className="bg-white border-4 border-black rounded-3xl shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] hover:translate-y-[-2px] transition-all duration-300">
       <CardHeader>
-        <CardTitle className="text-black font-black text-2xl">
-          Available Workflow Blocks
+        <CardTitle className="text-black font-black text-2xl flex items-center justify-between">
+          <span>Available Workflow Blocks</span>
+          <span className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 border border-black rounded-lg">
+            Drag or Click block to add
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -153,6 +157,7 @@ const AvailablePieces: React.FC<{
                         <WorkflowPiece
                           block={block}
                           onDragStart={onDragStart(block)}
+                          onClick={() => onAddBlock(block)}
                           chainBlocks={chainBlocks}
                         />
                       </div>
@@ -248,6 +253,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ wallet }) => {
     setDraggedBlock(null);
   };
 
+  const handleAddBlock = (block: BlockType) => {
+    if (isCompatibleWithChain(block)) {
+      setChainBlocks((prev) => [...prev, block]);
+    }
+  };
+
   return (
     <div className="bg-[#FFFDFA] p-0">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -262,13 +273,13 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ wallet }) => {
           </div>
 
           <p className="text-gray-600 font-bold text-lg">
-            Drag and drop blocks to construct your Monad pipeline visually
+            Drag and drop or click blocks to construct your Monad pipeline visually
           </p>
           
           {chainBlocks.length > 0 && (
             <div className="px-4 py-2 bg-purple-50 border-2 border-black rounded-xl inline-block shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
               <span className="text-purple-800 font-bold text-sm">
-                💡 Next: drag "{chainBlocks[chainBlocks.length - 1].compatibleWith.map(id => {
+                💡 Next: drag or click "{chainBlocks[chainBlocks.length - 1].compatibleWith.map(id => {
                   const block = blocks.find(b => b.id === id);
                   return block?.name;
                 }).join('" or "')}" to add step
@@ -277,7 +288,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ wallet }) => {
           )}
         </div>
 
-        <AvailablePieces onDragStart={handleDragStart} chainBlocks={chainBlocks} />
+        <AvailablePieces onDragStart={handleDragStart} onAddBlock={handleAddBlock} chainBlocks={chainBlocks} />
 
         <Card
           className="bg-white border-4 border-black rounded-3xl shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] hover:translate-y-[-2px] transition-all duration-300"

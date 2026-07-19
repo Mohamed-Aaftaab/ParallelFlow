@@ -36,12 +36,11 @@ const BlockInput: React.FC<BlockInputProps> = ({ input, value, onChange }) => {
   if (input.type === "textarea") {
     return (
       <Textarea
-        value={value}
+        value={value || input.defaultValue || ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={input.placeholder}
-        className="w-full border-2 border-black rounded-lg shadow-[2px_2px_0_0_rgba(0,0,0,1)] font-mono text-xs"
+        className="w-full border-2 border-black rounded-lg shadow-[2px_2px_0_0_rgba(0,0,0,1)] font-mono text-xs bg-white text-black"
         rows={3}
-        disabled
       />
     );
   }

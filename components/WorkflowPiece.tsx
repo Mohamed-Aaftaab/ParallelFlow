@@ -168,12 +168,12 @@ const WorkflowPiece: React.FC<WorkflowPieceProps> = ({
         />
 
         <foreignObject
-          x={isChainPiece ? "40" : "40"}
-          y={isChainPiece ? "20" : "30"}
-          width={isChainPiece ? totalWidth - 80 : baseWidth - 80}
-          height={isChainPiece ? totalHeight - 40 : baseHeight - 60}
+          x={isChainPiece ? "25" : "25"}
+          y={isChainPiece ? "15" : "20"}
+          width={isChainPiece ? totalWidth - 50 : baseWidth - 50}
+          height={isChainPiece ? totalHeight - 30 : baseHeight - 40}
         >
-          <div className="w-full h-full flex flex-col items-center justify-start">
+          <div className="w-full h-full flex flex-col items-center justify-start p-1">
             <block.icon
               size={32}
               className={cn(
