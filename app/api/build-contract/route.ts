@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildContractWithAgenticStark, validateContractInstructions } from "@/services/contractBuilder";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   try {
     console.log("🔄 Build Contract API called");
