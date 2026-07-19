@@ -290,9 +290,57 @@ const ExecuteButton: React.FC<ExecuteButtonProps> = ({
     
     else if (block.id === "export_report") {
       const format = blockValues["Export Format"] || "CSV";
-      const filename = blockValues["Filename"] || "parallelflow-report";
-      onLog(`✓ Exported workflow report successfully as ${format}`, "success");
-      onLog(`📂 File saved: ${filename}.${format.toLowerCase()}`, "info");
+      const filename = blockValues["Filename"] || "parallelflow-execution-report";
+      
+      onLog(`📊 Generating ${format} report file...`, "info");
+
+      // Generate and trigger browser download
+      try {
+        let content = "";
+        let mimeType = "text/csv";
+        const ext = format.toLowerCase() === "json" ? "json" : "csv";
+
+        if (ext === "json") {
+          mimeType = "application/json";
+          const reportData = {
+            title: "ParallelFlow Monad Execution Report",
+            timestamp: new Date().toISOString(),
+            network: "Monad Testnet (Chain ID 10143)",
+            wallet: walletAddress,
+            transactionCount: txHashes.length,
+            transactionHashes: txHashes,
+            blocksExecuted: blocks.map((b, i) => ({ step: i + 1, name: b.name, category: b.category })),
+          };
+          content = JSON.stringify(reportData, null, 2);
+        } else {
+          mimeType = "text/csv";
+          const headers = "Step,Block Name,Category,Technology,Status,Transaction Hash\n";
+          const rows = blocks
+            .map(
+              (b, i) =>
+                `${i + 1},"${b.name}","${b.category}","${b.technology}","SUCCESS","${
+                  txHashes[i] || "Confirmed"
+                }"`
+            )
+            .join("\n");
+          content = headers + rows;
+        }
+
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${filename}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        onLog(`✓ Exported workflow report successfully as ${format}`, "success");
+        onLog(`📂 File downloaded: ${filename}.${ext}`, "info");
+      } catch (err: any) {
+        onLog(`⚠️ Report generation error: ${err.message}`, "warning");
+      }
     } 
     
     else {
